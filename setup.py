@@ -1,5 +1,6 @@
 import setuptools
 from distutils.core import setup
+#python setup.py bdist_wheel --universal
 
 
 with open("README.md", "r") as fh:

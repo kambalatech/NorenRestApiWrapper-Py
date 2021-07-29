@@ -10,7 +10,6 @@ from time import sleep
 from collections import OrderedDict
 from collections import namedtuple
 
-#python setup.py bdist_wheel --universal
 
 Instrument = namedtuple('Instrument', ['exchange', 'token', 'symbol',
                                        'name', 'expiry', 'lot_size'])
@@ -40,7 +39,7 @@ def reportmsg(msg):
     #print(msg)
     logger.debug(msg)
 
-class StarApi:
+class NorenApi:
     __service_config = {
       'host': 'http://wsapihost/',
       'routes': {
@@ -55,8 +54,8 @@ class StarApi:
     }
 
     def __init__(self, host, wsendpoint):
-        self.__service_config.host = host
-        self.__service_config.websocket_endpoint = wsendpoint
+        self.__service_config['host'] = host
+        self.__service_config['websocket_endpoint'] = wsendpoint
 
         self.__websocket = None
         self.__websocket_connected = False
@@ -191,7 +190,7 @@ class StarApi:
         
     
     def login(self, userid, password, twoFA, vendor_code, api_secret, imei):
-        config = StarApi.__service_config
+        config = NorenApi.__service_config
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['authorize']}" 
@@ -255,7 +254,7 @@ class StarApi:
                     exchange, tradingsymbol, quantity, discloseqty,
                     price_type, price=0.0, trigger_price=None,
                     retention='DAY', amo='NO', remarks=None):
-        config = StarApi.__service_config
+        config = NorenApi.__service_config
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['placeorder']}" 
@@ -291,7 +290,7 @@ class StarApi:
 
     def modify_order(self, orderno, exchange, tradingsymbol, newquantity,
                     newprice_type, newprice=0.0, newtrigger_price=None, amo='NO'):
-        config = StarApi.__service_config
+        config = NorenApi.__service_config
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['modifyorder']}" 
@@ -322,7 +321,7 @@ class StarApi:
         return resDict
 
     def cancel_order(self, orderno):
-        config = StarApi.__service_config
+        config = NorenApi.__service_config
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['cancelorder']}" 
@@ -347,7 +346,7 @@ class StarApi:
         return resDict
 
     def get_order_book(self):
-        config = StarApi.__service_config
+        config = NorenApi.__service_config
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['orderbook']}" 
@@ -373,7 +372,7 @@ class StarApi:
         return resDict
 
     def get_time_price_series(self, exchange, token, starttime=None, endtime=None):
-        config = StarApi.__service_config
+        config = NorenApi.__service_config
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['TPSeries']}" 
