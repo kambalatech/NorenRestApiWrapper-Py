@@ -53,9 +53,9 @@ class NorenApi:
       'websocket_endpoint': 'wss://wsendpoint/'
     }
 
-    def __init__(self, host, wsendpoint):
+    def __init__(self, host, websocket):
         self.__service_config['host'] = host
-        self.__service_config['websocket_endpoint'] = wsendpoint
+        self.__service_config['websocket_endpoint'] = websocket
 
         self.__websocket = None
         self.__websocket_connected = False
