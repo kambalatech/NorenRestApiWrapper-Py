@@ -24,6 +24,7 @@ class ProductType(enum.Enum):
     Delivery = 'C'
     Intraday = 'I'
     Normal   = 'M'
+    CF       = 'M'
     
 class PriceType(enum.Enum):
     Market = 'MKT'
@@ -39,6 +40,14 @@ def reportmsg(msg):
     #print(msg)
     logger.debug(msg)
 
+def reporterror(msg):
+    #print(msg)
+    logger.error(msg)
+
+def reportinfo(msg):
+    #print(msg)
+    logger.info(msg)
+
 class NorenApi:
     __service_config = {
       'host': 'http://wsapihost/',
@@ -48,6 +57,7 @@ class NorenApi:
           'modifyorder': '/ModifyOrder',
           'cancelorder': 'CancelOrder',
           'orderbook': '/OrderBook',
+          'searchscrip': '/SearchScrip',
           'TPSeries' : '/TPSeries',
       },
       'websocket_endpoint': 'wss://wsendpoint/'
@@ -368,6 +378,36 @@ class NorenApi:
         #error is a json with stat and msg wchih we printed earlier.
         if type(resDict) != list:                            
                 return None
+
+        return resDict
+
+    def searchscrip(self, exchange, searchtext):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['searchscrip']}" 
+        reportmsg(url)
+        
+        if searchtext == None:
+            reporterror('search text cannot be null')
+            return None
+        
+        values              = {}
+        values["uid"]       = self.__username
+        values["exch"]      = exchange
+        values["stext"]     = searchtext       
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+
+        if resDict['stat'] != 'Ok':            
+            return None        
 
         return resDict
 
