@@ -209,7 +209,7 @@ class NorenApi:
         reportmsg(url)
 
         #Convert to SHA 256 for password and app key
-        pwd = hashlib.sha256(u_pwd.encode('utf-8')).hexdigest()
+        pwd = hashlib.sha256(password.encode('utf-8')).hexdigest()
         u_app_key = '{0}|{1}'.format(userid, api_secret)
         app_key=hashlib.sha256(u_app_key.encode('utf-8')).hexdigest()
         #prepare the data
