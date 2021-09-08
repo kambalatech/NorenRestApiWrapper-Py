@@ -205,13 +205,18 @@ class NorenApi:
         #prepare the uri
         url = f"{config['host']}{config['routes']['authorize']}" 
         reportmsg(url)
+
+        #Convert to SHA 256 for password and app key
+        pwd = hashlib.sha256(u_pwd.encode('utf-8')).hexdigest()
+        u_app_key = '{0}|{1}'.format(userid, api_secret)
+        app_key=hashlib.sha256(u_app_key.encode('utf-8')).hexdigest()
         #prepare the data
         values              = { "source": "API" , "apkversion": "1.0.0"}
         values["uid"]       = userid
-        values["pwd"]       = password
+        values["pwd"]       = pwd
         values["factor2"]   = twoFA
         values["vc"]        = vendor_code
-        values["appkey"]    = api_secret        
+        values["appkey"]    = app_key        
         values["imei"]      = imei        
 
         payload = 'jData=' + json.dumps(values)
