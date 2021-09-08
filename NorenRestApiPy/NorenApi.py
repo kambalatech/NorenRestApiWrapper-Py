@@ -5,6 +5,8 @@ import websocket
 import logging
 import enum
 import datetime
+import hashlib
+
 from time import sleep
 
 from collections import OrderedDict
