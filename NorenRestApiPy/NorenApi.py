@@ -89,7 +89,7 @@ class NorenApi:
         
         while True:
             try:
-                self.__websocket.run_forever()
+                self.__websocket.run_forever( ping_interval=3,  ping_payload='{"t":"h"}')
             except Exception as e:
                 logger.warning(f"websocket run forever ended in exception, {e}")
             
