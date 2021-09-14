@@ -322,7 +322,16 @@ class NorenApi:
         values["tsym"]          = tradingsymbol
         values["qty"]           = str(newquantity)
         values["prctyp"]        = newprice_type.value        
-        values["prc"]           = str(newprice)        
+        values["prc"]           = str(newprice)
+
+        if (newprice_type == PriceType.StopLossLimit) or (newprice_type == PriceType.StopLossLimit):
+            if (newtrigger_price != None):
+                values["trgprc"] = newtrigger_price                
+            else:
+                reporterror('trigger price is missing')
+                return None
+
+
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
