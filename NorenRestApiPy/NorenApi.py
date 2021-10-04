@@ -61,6 +61,9 @@ class NorenApi:
           'orderbook': '/OrderBook',
           'searchscrip': '/SearchScrip',
           'TPSeries' : '/TPSeries',
+          'holdings' : '/Holdings',
+          'positions': '/PositionBook',
+
       },
       'websocket_endpoint': 'wss://wsendpoint/'
     }
@@ -463,4 +466,57 @@ class NorenApi:
 
         return resDict
 
+    def get_holdings(self, product_type = None):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['holdings']}" 
+        reportmsg(url)
+        
+        if product_type == None:
+            product_type = ProductType.Delivery
+        
+        values              = {}
+        values["uid"]       = self.__username
+        values["actid"]     = self.__accountid
+        values["prd"]       = product_type.value       
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+
+        if type(resDict) != list:                            
+                return None
+
+        return resDict
+
+    def get_positions(self):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['positions']}" 
+        reportmsg(url)        
+        
+        values              = {}
+        values["uid"]       = self.__username
+        values["actid"]     = self.__accountid
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+
+        if type(resDict) != list:                            
+            return None
+
+        return resDict
 

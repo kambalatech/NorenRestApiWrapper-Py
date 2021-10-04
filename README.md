@@ -18,6 +18,8 @@ class  ```NorenApi```
 - [place_order](#md-place_order)
 - [modify_order](#md-modify_order)
 - [cancel_order](#md-cancel_order)
+- [get_holdings](#md-get_holdings)
+- [get_positions](#md-get_positions)
 - [searchscrip](#md-searchscrip)
 - [start_websocket](#md-start_websocket)
 - [subscribe](#md-subscribe)
@@ -41,7 +43,7 @@ place an order to oms
 | Param | Type | Optional |Description |
 | --- | --- | --- | ---|
 | buy_or_sell | ```enum``` | False | BuyorSell enum class |
-| product_type | ```string```| False | ProductType enum class |
+| product_type | ```enum```| False | ProductType enum class |
 | exchange | ```string``` | False | Exchange NSE  / NFO / BSE / CDS |
 | tradingsymbol | ```string``` | False | Unique id of contract on which order to be placed. (use url encoding to avoid special char error for symbols like M&M |
 | quantity | ```integer``` | False | order quantity   |
@@ -72,6 +74,20 @@ cancel an order
 | Param | Type | Optional |Description |
 | --- | --- | --- | ---|
 | orderno | ```string``` | False | orderno with status open |
+
+#### <a name="md-get_holdings"></a> get_holdings(product_type)
+retrieves the holdings as a list
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| product_type | ```enum``` | True | retreives the delivery holdings or for a given product  |
+
+#### <a name="md-get_positions"></a> get_positions()
+retrieves the positions cf and day as a list
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+|  No Parameters  |
 
 #### <a name="md-searchscrip"></a> searchscrip(exchange, searchtext):
 search for scrip or contract and its properties 

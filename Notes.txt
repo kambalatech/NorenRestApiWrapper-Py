@@ -1,3 +1,8 @@
+ 0.0.6 - 04-10-2021 -Reference 1.6.0 NorenWCAPI
+  
+* added holdings 
+* added positions
+
 0.0.4
 
 * added heartbeat for websocket
