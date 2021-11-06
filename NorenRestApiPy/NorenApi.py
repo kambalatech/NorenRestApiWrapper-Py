@@ -63,6 +63,7 @@ class NorenApi:
           'TPSeries' : '/TPSeries',
           'holdings' : '/Holdings',
           'positions': '/PositionBook',
+          'scripinfo': '/GetSecurityInfo',
 
       },
       'websocket_endpoint': 'wss://wsendpoint/'
@@ -415,6 +416,36 @@ class NorenApi:
         values["uid"]       = self.__username
         values["exch"]      = exchange
         values["stext"]     = searchtext       
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+
+        if resDict['stat'] != 'Ok':            
+            return None        
+
+        return resDict
+
+    def get_security_info(self, exchange, token):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['scripinfo']}" 
+        reportmsg(url)
+        
+        if searchtext == None:
+            reporterror('search text cannot be null')
+            return None
+        
+        values              = {}
+        values["uid"]       = self.__username
+        values["exch"]      = exchange
+        values["token"]     = token       
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         

@@ -21,6 +21,7 @@ class  ```NorenApi```
 - [get_holdings](#md-get_holdings)
 - [get_positions](#md-get_positions)
 - [searchscrip](#md-searchscrip)
+- [get_security_info](#md-get_security_info)
 - [start_websocket](#md-start_websocket)
 - [subscribe](#md-subscribe)
 - [unsubscribe](#md-unsubscribe)
@@ -114,6 +115,65 @@ the response is as follows,
 | ti | ```string``` | True | tick size minimum increments of paise for price  |
 | ls | ```string``` | True | Lot Size |
 
+
+
+#### <a name="md-get_security_info"></a> get_security_info(exchange, token):
+gets the complete details and its properties 
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| exchange | ```string``` | True | Exchange NSE  / NFO / BSE / CDS |
+| token | ```string``` | True | token number of the contract|
+
+the response is as follows,
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| stat | ```string``` | True | ok or Not_ok |
+| values | ```string``` | True | properties of the scrip |
+| emsg | ```string``` | False | Error Message |
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| exch | ```string``` | True | Exchange NSE  / NFO / BSE / CDS |
+| tsym | ```string``` | True | Trading Symbol is the readable Unique id of contract/scrip |
+| cname| ```string``` | True |  |
+| symnam| ```string``` | True |  |
+| seg| ```string``` | True |  |
+| exd| ```string``` | True |  |
+| instname| ```string``` | True |  |
+| strprc| ```string``` | True |  |
+| optt| ```string``` | True |  |
+| isin| ```string``` | True |  |
+| ti | ```string``` | True |  |
+| ls| ```string``` | True |  |
+| pp| ```string``` | True |  |
+| mult| ```string``` | True |  |
+| gp_nd| ```string``` | True |  |
+| prcunt| ```string``` | True |  |
+| prcqqty| ```string``` | True |  |
+| trdunt| ```string``` | True |  |
+| delunt| ```string``` | True |  |
+| frzqty| ```string``` | True |  |
+| gsmind| ```string``` | True |  |
+| elmbmrg| ```string``` | True |  |
+| elmsmrg| ```string``` | True |  |
+| addbmrg| ```string``` | True |  |
+| addsmrg| ```string``` | True |  |
+| splbmrg| ```string``` | True |  |
+| splsmrg| ```string``` | True |  |
+| delmrg| ```string``` | True |  |
+| tenmrg| ```string``` | True |  |
+| tenstrd| ```string``` | True |  |
+| tenendd| ```string``` | True |  |
+| exestrd| ```string``` | True |  |
+| exeendd| ```string``` | True |  |
+| elmmrg| ```string``` | True |  |
+| varmrg| ```string``` | True |  |
+| expmrg| ```string``` | True |  |
+| token| ```string``` | True |  |
+| prcftr_d| ```string``` | True |  |
+
 #### <a name="md-start_websocket"></a> start_websocket()
 starts the websocket
 
@@ -157,14 +217,9 @@ user        = '< user id>'
 u_pwd       = '< password >'
 factor2     = 'second factor'
 vc          = 'vendor code'
-api_secret  = 'secret key'
+app_key     = 'secret key'
 imei        = 'uniq identifier'
 
-u_app_key='{0}|{1}'.format(user,api_secret)
-
-#Convert to SHA 256 for password and app key
-pwd = hashlib.sha256(u_pwd.encode('utf-8')).hexdigest()
-app_key=hashlib.sha256(u_app_key.encode('utf-8')).hexdigest()
 
 ret = api.login(userid=user, password=pwd, twoFA=factor2, vendor_code=vc, api_secret=app_key, imei=imei)
 print(ret)
