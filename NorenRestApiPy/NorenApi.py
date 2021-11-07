@@ -436,11 +436,7 @@ class NorenApi:
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['scripinfo']}" 
-        reportmsg(url)
-        
-        if searchtext == None:
-            reporterror('search text cannot be null')
-            return None
+        reportmsg(url)        
         
         values              = {}
         values["uid"]       = self.__username
