@@ -13,15 +13,23 @@ to build this package and install it on your server please use
 ****
 
 ## API 
-class  ```NorenApi```
+```NorenApi```
 - [login](#md-login)
+
+Symbols
+- [searchscrip](#md-searchscrip)
+- [get_security_info](#md-get_security_info)
+
+Orders and Trades
 - [place_order](#md-place_order)
 - [modify_order](#md-modify_order)
 - [cancel_order](#md-cancel_order)
+
+Holdings and Limits
 - [get_holdings](#md-get_holdings)
 - [get_positions](#md-get_positions)
-- [searchscrip](#md-searchscrip)
-- [get_security_info](#md-get_security_info)
+
+Websocket API
 - [start_websocket](#md-start_websocket)
 - [subscribe](#md-subscribe)
 - [unsubscribe](#md-unsubscribe)
@@ -190,8 +198,8 @@ get order and trade update callbacks
 #### <a name="md-subscribe"></a> subscribe([instruments])
 send a list of instruments to watch
 | Param | Type | Optional |Description |
-| --- | --- | --- | ---|
-| instruments | ```list``` | False | list of instruments [NSE|22,CDS|1] |
+| --- | --- | --- | -----|
+| instruments | ```list``` | False | list of instruments [NSE\|22,CDS\|1] |
 
 
 #### <a name="md-unsubscribe"></a> unsubscribe()
@@ -223,6 +231,204 @@ imei        = 'uniq identifier'
 
 ret = api.login(userid=user, password=pwd, twoFA=factor2, vendor_code=vc, api_secret=app_key, imei=imei)
 print(ret)
+```
+
+## Example Symbol/Contract  Example_market.py
+This Example shows API usage for finding scrips and its properties
+
+### Search Scrips
+The call can be made to get the exchange provided token for a scrip or alternately can search for a partial string to get a list of matching scrips
+
+```
+api.searchscrip(exchange='NSE', searchtext='REL')
+```
+This will reply as following
+```
+{
+    "stat": "Ok",
+    "values": [
+        {
+            "exch": "NSE",
+            "token": "18069",
+            "tsym": "REL100NAV-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "24225",
+            "tsym": "RELAXO-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "4327",
+            "tsym": "RELAXOFOOT-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "18068",
+            "tsym": "RELBANKNAV-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "2882",
+            "tsym": "RELCAPITAL-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "18070",
+            "tsym": "RELCONSNAV-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "18071",
+            "tsym": "RELDIVNAV-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "18072",
+            "tsym": "RELGOLDNAV-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "2885",
+            "tsym": "RELIANCE-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "15068",
+            "tsym": "RELIGARE-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "553",
+            "tsym": "RELINFRA-EQ"
+        },
+        {
+            "exch": "NSE",
+            "token": "18074",
+            "tsym": "RELNV20NAV-EQ"
+        }
+    ]
+}
+```
+### Security Info
+This call is done to get the properties of the scrip such as freeze qty and margins
+```
+api.get_security_info(exchange='NSE', token='22')
+```
+The response for the same would be 
+```
+{
+   "request_time": "17:43:38 31-10-2020",
+   "stat": "Ok",
+   "exch": "NSE",
+   "tsym": "ACC-EQ",
+   "cname": "ACC LIMITED",
+   "symname": "ACC",
+   "seg": "EQT",
+   "instname": "EQ",
+   "isin": "INE012A01025",
+   "pp": "2",
+   "ls": "1",
+   "ti": "0.05",
+   "mult": "1",
+   "prcftr_d": "(1 / 1 ) * (1 / 1)",
+   "trdunt": "ACC.BO",
+   "delunt": "ACC",
+   "token": "22",
+   "varmrg": "40.00"
+}
+
+```
+### Subscribe to a live feed
+Subscribe to a single token as follows
+
+```
+api.subscribe('NSE|13')
+```
+
+First we need to connect to the WebSocket and then subscribe as follows
+```
+feed_opened = False
+
+def event_handler_feed_update(tick_data):
+    print(f"feed update {tick_data}")
+
+def open_callback():
+    global feed_opened
+    feed_opened = True
+
+
+api.start_websocket( order_update_callback=event_handler_order_update,
+                     subscribe_callback=event_handler_feed_update, 
+                     socket_open_callback=open_callback)
+
+while(feed_opened==False):
+    pass
+
+# subscribe to a single token 
+api.subscribe('NSE|13')
+
+#subscribe to multiple tokens
+api.subscribe(['NSE|22', 'BSE|522032'])
+```
+## Example - Orders and Trades
+### Place Order
+    Place a Limit order as follows
+```
+    api.place_order(buy_or_sell=BuyorSell.Buy, product_type=ProductType.Delivery,
+                        exchange='NSE', tradingsymbol='INFY-EQ', 
+                        quantity=1, discloseqty=0,price_type=PriceType.Limit, price=1500, trigger_price=None,
+                        retention='DAY', remarks='my_order_001')
+```
+    Place a Market Order as follows
+```
+    api.place_order(buy_or_sell=BuyorSell.Buy, product_type=ProductType.Delivery,
+                        exchange='NSE', tradingsymbol='INFY-EQ', 
+                        quantity=1, discloseqty=0,price_type=PriceType.Market, price=0, trigger_price=None,
+                        retention='DAY', remarks='my_order_001')
+```
+    Place a StopLoss Order as follows
+```
+    api.place_order(buy_or_sell=BuyorSell.Buy, product_type=ProductType.Delivery,
+                        exchange='NSE', tradingsymbol='INFY-EQ', 
+                        quantity=1, discloseqty=0,price_type=PriceType.StopLossLimit, price=1500, trigger_price=1450,
+                        retention='DAY', remarks='my_order_001')
+```
+### Modify Order
+    Modify a New Order by providing the OrderNumber
+```
+    api.modify_order(exchange='NSE', tradingsymbol='INFY-EQ', orderno=orderno,
+                                   newquantity=2, newprice_type=PriceType.Limit, newprice=1505)
+```
+### Cancel Order
+    Cancel a New Order by providing the Order Number
+```
+    api.cancel_order(orderno=orderno)
+```
+### Subscribe to Order Updates
+
+Connecting to the Websocket will automatically subscribe and provide the order updates in the call back as follows
+Note: Feed and Order updates are received from the same websocket and needs to be connected once only.
+
+```
+feed_opened = False
+
+def event_handler_order_update(order):
+    print(f"order feed {order}")
+
+def open_callback():
+    global feed_opened
+    feed_opened = True
+
+
+api.start_websocket( order_update_callback=event_handler_order_update,
+                     subscribe_callback=event_handler_feed_update, 
+                     socket_open_callback=open_callback)
+
+while(feed_opened==False):
+    pass
+
+
 ```
 
 ****
