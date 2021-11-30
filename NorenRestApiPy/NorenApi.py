@@ -64,6 +64,7 @@ class NorenApi:
           'holdings' : '/Holdings',
           'positions': '/PositionBook',
           'scripinfo': '/GetSecurityInfo',
+          'getquotes': '/GetQuotes',
 
       },
       'websocket_endpoint': 'wss://wsendpoint/'
@@ -295,6 +296,7 @@ class NorenApi:
         values["trgprc"]    = str(trigger_price)
         values["ret"]       = retention
         values["remarks"]   = remarks
+        values["amo"]       = amo
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
@@ -436,6 +438,32 @@ class NorenApi:
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['scripinfo']}" 
+        reportmsg(url)        
+        
+        values              = {}
+        values["uid"]       = self.__username
+        values["exch"]      = exchange
+        values["token"]     = token       
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+
+        if resDict['stat'] != 'Ok':            
+            return None        
+
+        return resDict
+
+    def get_quotes(self, exchange, token):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['getquotes']}" 
         reportmsg(url)        
         
         values              = {}
