@@ -503,8 +503,9 @@ class NorenApi:
         values["uid"]       = self.__username
         values["exch"]      = exchange
         values["token"]     = token
-        values["starttime"] = starttime
-        values["endtime"]   = endtime
+        values["st"] = str(starttime)
+        if endtime != None:
+            values["et"]   = str(endtime)
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
