@@ -19,15 +19,21 @@ to build this package and install it on your server please use
 Symbols
 - [searchscrip](#md-searchscrip)
 - [get_security_info](#md-get_security_info)
+- [get_quotes](#md-get_quotes)
+- [get_time_price_series](#md-get_time_price_series)
 
 Orders and Trades
 - [place_order](#md-place_order)
 - [modify_order](#md-modify_order)
 - [cancel_order](#md-cancel_order)
+- [exit_order](#md-exit_order)
+- [get_orderbook](#md-get_orderbook)
+- [get_singleorderhistory](#md-get_singleorderhistory)
 
 Holdings and Limits
 - [get_holdings](#md-get_holdings)
 - [get_positions](#md-get_positions)
+- [get_limits](#md-get_limits)
 
 Websocket API
 - [start_websocket](#md-start_websocket)
@@ -56,13 +62,13 @@ place an order to oms
 
 | Param | Type | Optional |Description |
 | --- | --- | --- | ---|
-| buy_or_sell | ```enum``` | False | BuyorSell enum class |
-| product_type | ```enum```| False | ProductType enum class |
+| buy_or_sell | ```string``` | False | B -> BUY, S -> SELL |
+| product_type | ```string```| False | C / M / H Product name (Select from ‘prarr’ Array provided in User Details response, and if same is allowed for selected, exchange. Show product display name, for user to select, and send corresponding prd in API call) |
 | exchange | ```string``` | False | Exchange NSE  / NFO / BSE / CDS |
 | tradingsymbol | ```string``` | False | Unique id of contract on which order to be placed. (use url encoding to avoid special char error for symbols like M&M |
 | quantity | ```integer``` | False | order quantity   |
 | discloseqty | ```integer``` | False | order disc qty |
-| price_type | ```enum```| False | PriceType enum class |
+| price_type | ```string```| False | PriceType enum class |
 | price | ```integer```| False | Price in paise, 100.00 is sent as 10000 |
 | trigger_price | ```integer```| False | Price in paise |
 | retention | ```string```| False | DAY / IOC / EOS |
@@ -78,7 +84,7 @@ modify the quantity pricetype or price of an order
 | exchange | ```string``` | False | Exchange NSE  / NFO / BSE / CDS |
 | tradingsymbol | ```string``` | False | Unique id of contract on which order to be placed. (use url encoding to avoid special char error for symbols like M&M |
 | newquantity | ```integer``` | False | new order quantity   |
-| newprice_type | ```enum```| False | PriceType enum class |
+| newprice_type | ```string```| False | PriceType enum class |
 | newprice | ```integer```| False | Price in paise, 100.00 is sent as 10000 |
 | newtrigger_price | ```integer```| False | Price in paise |
 
@@ -89,12 +95,29 @@ cancel an order
 | --- | --- | --- | ---|
 | orderno | ```string``` | False | orderno with status open |
 
+#### <a name="md-exit_order"></a> exit_order(orderno)
+exits a cover or bracket order
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| orderno | ```string``` | False | orderno with status open |
+| prd | ```string``` | False | Allowed for only H and B products (Cover order and bracket order)|
+
+
+#### <a name="md-get_singleorderhistory"></a>  single order history(orderno)
+history an order
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| orderno | ```string``` | False | orderno  |
+
+
 #### <a name="md-get_holdings"></a> get_holdings(product_type)
 retrieves the holdings as a list
 
 | Param | Type | Optional |Description |
 | --- | --- | --- | ---|
-| product_type | ```enum``` | True | retreives the delivery holdings or for a given product  |
+| product_type | ```string``` | True | retreives the delivery holdings or for a given product  |
 
 #### <a name="md-get_positions"></a> get_positions()
 retrieves the positions cf and day as a list
@@ -103,8 +126,17 @@ retrieves the positions cf and day as a list
 | --- | --- | --- | ---|
 |  No Parameters  |
 
+#### <a name="md-get_limits"></a> get_limits
+retrieves the margin and limits set
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| product_type | ```string``` | True | retreives the delivery holdings or for a given product  |
+| segment | ```string``` | True | CM / FO / FX  |
+| exchange | ```string``` | True | Exchange NSE/BSE/MCX |
+
 #### <a name="md-searchscrip"></a> searchscrip(exchange, searchtext):
-search for scrip or contract and its properties 
+search for scrip or contract and its properties  
 
 | Param | Type | Optional |Description |
 | --- | --- | --- | ---|
@@ -187,6 +219,108 @@ the response is as follows,
 | token| ```string``` | True |  |
 | prcftr_d| ```string``` | True |  |
 
+#### <a name="md-get_quotes"></a> get_quotes(exchange, token):
+gets the complete details and its properties 
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| exchange | ```string``` | True | Exchange NSE  / NFO / BSE / CDS |
+| token | ```string``` | True | token number of the contract|
+
+the response is as follows,
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| stat | ```string``` | True | ok or Not_ok |
+| values | ```string``` | True | properties of the scrip |
+| emsg | ```string``` | False | Error Message |
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| exch | ```string``` | True | Exchange NSE  / NFO / BSE / CDS |
+| tsym | ```string``` | True | Trading Symbol is the readable Unique id of contract/scrip |
+| cname | ```string``` | True | Company Name |
+| symname| ```string``` | True |Symbol Name |
+| seg| ```string``` | True |Segment |
+| instname| ```string``` | True |Instrument Name |
+| isin| ```string``` | True |ISIN |
+| pp| ```string``` | True |Price precision |
+| ls| ```string``` | True |Lot Size  |
+| ti| ```string``` | True |Tick Size  |
+| mult| ```string``` | True |Multiplier |
+| uc| ```string``` | True |Upper circuit limitlc |
+| lc| ```string``` | True |Lower circuit limit |
+| prcftr_d| ```string``` | True |Price factor((GN / GD) * (PN/PD)) |
+| token| ```string``` | True |Token |
+| lp| ```string``` | True |LTP |
+| o| ```string``` | True |Open Price |
+| h| ```string``` | True |Day High Price |
+| l| ```string``` | True |Day Low Price |
+| v| ```string``` | True |Volume |
+| ltq| ```string``` | True |Last trade quantity |
+| ltt| ```string``` | True |Last trade time |
+| bp1| ```string``` | True |Best Buy Price 1 |
+| sp1| ```string``` | True |Best Sell Price 1 |
+| bp2| ```string``` | True |Best Buy Price 2 |
+| sp2| ```string``` | True |Best Sell Price 2 |
+| bp3| ```string``` | True |Best Buy Price 3 |
+| sp3| ```string``` | True |Best Sell Price 3 |
+| bp4| ```string``` | True |Best Buy Price 4 |
+| sp4| ```string``` | True |Best Sell Price 4 |
+| bp5| ```string``` | True |Best Buy Price 5 |
+| sp5| ```string``` | True |Best Sell Price 5 |
+| bq1| ```string``` | True |Best Buy Quantity 1 |
+| sq1| ```string``` | True |Best Sell Quantity 1 |
+| bq2| ```string``` | True |Best Buy Quantity 2 |
+| sq2| ```string``` | True |Best Sell Quantity 2 |
+| bq3| ```string``` | True |Best Buy Quantity 3 |
+| sq3| ```string``` | True |Best Sell Quantity 3 |
+| bq4| ```string``` | True |Best Buy Quantity 4 |
+| sq4| ```string``` | True |Best Sell Quantity 4 |
+| bq5| ```string``` | True |Best Buy Quantity 5 |
+| sq5| ```string``` | True |Best Sell Quantity 5 |
+| bo1| ```string``` | True |Best Buy Orders 1 |
+| so1| ```string``` | True |Best Sell Orders 1 |
+| bo2| ```string``` | True |Best Buy Orders 2 |
+| so2| ```string``` | True |Best Sell Orders 2 |
+| bo3| ```string``` | True |Best Buy Orders 3 |
+| so3| ```string``` | True |Best Sell Orders 3 |
+| bo4| ```string``` | True |Best Buy Orders 4 |
+| so4| ```string``` | True |Best Sell Orders 4 |
+| bo5| ```string``` | True |Best Buy Orders 5 |
+| so5| ```string``` | True |Best Sell Orders 5|
+
+#### <a name="md-get_time_price_series"></a> get_time_price_series(exchange, token, starttime, endtime):
+gets the chart date for the symbol
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| exchange | ```string``` | True | Exchange NSE  / NFO / BSE / CDS |
+| token | ```string``` | True | token number of the contract|
+| starttime | ```string``` | True | Start time (seconds since 1 jan 1970) |
+| endtime | ```string``` | True | End Time (seconds since 1 jan 1970)|
+
+the response is as follows,
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| stat | ```string``` | True | ok or Not_ok |
+| values | ```string``` | True | properties of the scrip |
+| emsg | ```string``` | False | Error Message |
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| time | ```string``` | True | DD/MM/CCYY hh:mm:ss |
+| into | ```string``` | True | Interval Open |
+| inth | ```string``` | True | Interval High |
+| intl | ```string``` | True | Interval Low  |
+| intc | ```string``` | True | Interval Close  |
+| intvwap | ```string``` | True | Interval vwap  |
+| intv | ```string``` | True | Interval volume  |
+| v | ```string``` | True | volume  |
+| inoi | ```string``` | True | Interval oi change  |
+| oi | ```string``` | True | oi  |
+
 #### <a name="md-start_websocket"></a> start_websocket()
 starts the websocket
 
@@ -216,11 +350,10 @@ First configure the endpoints in the api_helper constructor.
 Thereon provide your credentials and login as follows.
 
 ```python
-from NorenRestApiPy.NorenApi import PriceType, BuyorSell, ProductType
-from api_helper import NorenApiPy, get_time
+from api_helper import NorenApiPy
 import logging
-import hashlib
 
+#enable dbug to see request and responses
 logging.basicConfig(level=logging.DEBUG)
 
 #start of our program
@@ -245,12 +378,11 @@ This Example shows API usage for finding scrips and its properties
 ### Search Scrips
 The call can be made to get the exchange provided token for a scrip or alternately can search for a partial string to get a list of matching scrips
 Trading Symbol:
-oSymbolName + ExpDate + 'F' for all data having InstrumentName starting with 
-FUT
-oSymbolName + ExpDate + 'P' + StrikePrice for all data 
-having InstrumentName starting with OPT and with OptionType PE
-oSymbolName + ExpDate + 'C' + StrikePrice for all data 
-having InstrumentName starting with OPT and with OptionType C
+
+SymbolName + ExpDate + 'F' for all data having InstrumentName starting with FUT
+SymbolName + ExpDate + 'P' + StrikePrice for all data having InstrumentName starting with OPT and with OptionType PE
+SymbolName + ExpDate + 'C' + StrikePrice for all data having InstrumentName starting with OPT and with OptionType C
+For MCX, F to be ignored for FUT instruments
 ```
 api.searchscrip(exchange='NSE', searchtext='REL')
 ```

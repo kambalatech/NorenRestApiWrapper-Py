@@ -18,26 +18,40 @@ Instrument = namedtuple('Instrument', ['exchange', 'token', 'symbol',
 logger = logging.getLogger(__name__)
 
 
-class FeedType(enum.Enum):
+class ProductType:
+    Delivery = 'C'
+    Intraday = 'I'
+    Normal   = 'M'
+    CF       = 'M'
+
+class FeedType:
     TOUCHLINE = 1    
     SNAPQUOTE = 2
 
-class ProductType(enum.Enum):
+class ProductType:
     Delivery = 'C'
     Intraday = 'I'
     Normal   = 'M'
     CF       = 'M'
     
-class PriceType(enum.Enum):
+class PriceType:
     Market = 'MKT'
     Limit = 'LMT'
     StopLossLimit = 'SL-LMT'
     StopLossMarket = 'SL-MKT'
 
-class BuyorSell(enum.Enum):
+class BuyorSell:
     Buy = 'B'
     Sell = 'S'
 
+
+
+#class ProductType(enum.Enum):
+#    Delivery = 'C'
+#    Intraday = 'I'
+#    Normal   = 'M'
+#    CF       = 'M'
+    
 def reportmsg(msg):
     #print(msg)
     logger.debug(msg)
@@ -57,11 +71,14 @@ class NorenApi:
           'authorize': '/QuickAuth',
           'placeorder': '/PlaceOrder',
           'modifyorder': '/ModifyOrder',
-          'cancelorder': 'CancelOrder',
+          'cancelorder': '/CancelOrder',
+          'exitorder': '/ExitSNOOrder',
           'orderbook': '/OrderBook',
+          'singleorderhistory': '/SingleOrdHist',
           'searchscrip': '/SearchScrip',
           'TPSeries' : '/TPSeries',
           'holdings' : '/Holdings',
+          'limits' : '/Limits',
           'positions': '/PositionBook',
           'scripinfo': '/GetSecurityInfo',
           'getquotes': '/GetQuotes',
@@ -275,7 +292,7 @@ class NorenApi:
     def place_order(self, buy_or_sell, product_type,
                     exchange, tradingsymbol, quantity, discloseqty,
                     price_type, price=0.0, trigger_price=None,
-                    retention='DAY', amo='NO', remarks=None):
+                    retention='DAY', amo='NO', remarks=None, bookloss_price = 0.0, bookprofit_price = 0.0, trail_price = 0.0):
         config = NorenApi.__service_config
 
         #prepare the uri
@@ -285,25 +302,40 @@ class NorenApi:
         values              = {'ordersource':'API'}
         values["uid"]       = self.__username
         values["actid"]     = self.__accountid
-        values["trantype"]  = buy_or_sell.value
-        values["prd"]       = product_type.value        
+        values["trantype"]  = buy_or_sell
+        values["prd"]       = product_type
         values["exch"]      = exchange
         values["tsym"]      = tradingsymbol
         values["qty"]       = str(quantity)
         values["dscqty"]    = str(discloseqty)        
-        values["prctyp"]    = price_type.value
+        values["prctyp"]    = price_type
         values["prc"]       = str(price)
         values["trgprc"]    = str(trigger_price)
         values["ret"]       = retention
         values["remarks"]   = remarks
         values["amo"]       = amo
         
+        #if cover order or high leverage order
+        if product_type == 'H':            
+            values["blprc"]       = str(bookloss_price)
+            #trailing price
+            if trail_price != 0.0:
+                values["trailprc"] = str(trail_price)
+
+        #bracket order
+        if product_type == 'B':            
+            values["blprc"]       = str(bookloss_price)
+            values["bpprc"]       = str(bookprofit_price)
+            #trailing price
+            if trail_price != 0.0:
+                values["trailprc"] = str(trail_price)
+
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
-        print(payload)
+        reportmsg(payload)
 
         res = requests.post(url, data=payload)
-        print(res.text)
+        reportmsg(res.text)
 
         resDict = json.loads(res.text)
         if resDict['stat'] != 'Ok':            
@@ -312,7 +344,7 @@ class NorenApi:
         return resDict
 
     def modify_order(self, orderno, exchange, tradingsymbol, newquantity,
-                    newprice_type, newprice=0.0, newtrigger_price=None, amo='NO'):
+                    newprice_type, newprice=0.0, newtrigger_price=None, bookloss_price = 0.0, bookprofit_price = 0.0, trail_price = 0.0):
         config = NorenApi.__service_config
 
         #prepare the uri
@@ -327,24 +359,38 @@ class NorenApi:
         values["exch"]          = exchange
         values["tsym"]          = tradingsymbol
         values["qty"]           = str(newquantity)
-        values["prctyp"]        = newprice_type.value        
+        values["prctyp"]        = newprice_type        
         values["prc"]           = str(newprice)
 
-        if (newprice_type == PriceType.StopLossLimit) or (newprice_type == PriceType.StopLossLimit):
+        if (newprice_type == 'SL-LMT') or (newprice_type == 'SL-MKT'):
             if (newtrigger_price != None):
                 values["trgprc"] = newtrigger_price                
             else:
                 reporterror('trigger price is missing')
                 return None
 
+        #if cover order or high leverage order
+        if product_type == 'H':            
+            values["blprc"]       = str(bookloss_price)
+            #trailing price
+            if trail_price != 0.0:
+                values["trailprc"] = str(trail_price)
+
+        #bracket order
+        if product_type == 'B':            
+            values["blprc"]       = str(bookloss_price)
+            values["bpprc"]       = str(bookprofit_price)
+            #trailing price
+            if trail_price != 0.0:
+                values["trailprc"] = str(trail_price)
 
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
-        print(payload)
+        reportmsg(payload)
 
         res = requests.post(url, data=payload)
-        print(res.text)
+        reportmsg(res.text)
 
         resDict = json.loads(res.text)
         if resDict['stat'] != 'Ok':            
@@ -366,7 +412,7 @@ class NorenApi:
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
-        print(payload)
+        reportmsg(payload)
 
         res = requests.post(url, data=payload)
         print(res.text)
@@ -376,6 +422,59 @@ class NorenApi:
             return None
 
         return resDict
+
+    def exit_order(self, orderno, product_type):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['exitorder']}" 
+        print(url)
+
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["norenordno"]    = orderno
+        values["prd"]           = product_type
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        if resDict['stat'] != 'Ok':            
+            return None
+
+        return resDict
+
+    def single_order_history(self, orderno):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['singleorderhistory']}" 
+        print(url)
+        
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["norenordno"]    = orderno
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        #error is a json with stat and msg wchih we printed earlier.
+        if type(resDict) != list:                            
+                return None
+
+        return resDict
+
 
     def get_order_book(self):
         config = NorenApi.__service_config
@@ -535,7 +634,41 @@ class NorenApi:
         values              = {}
         values["uid"]       = self.__username
         values["actid"]     = self.__accountid
-        values["prd"]       = product_type.value       
+        values["prd"]       = product_type       
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+
+        if type(resDict) != list:                            
+                return None
+
+        return resDict
+
+    def get_limits(self, product_type = None, segment = None, exchange = None):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['limits']}" 
+        reportmsg(url)        
+        
+        values              = {}
+        values["uid"]       = self.__username
+        values["actid"]     = self.__accountid
+        
+        if product_type != None:
+            values["prd"]       = product_type       
+        
+        if product_type != None:
+            values["seg"]       = segment       
+        
+        if product_type != None:
+            values["exch"]       = exchange       
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
