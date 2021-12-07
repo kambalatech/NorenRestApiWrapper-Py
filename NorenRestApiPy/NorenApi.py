@@ -6,7 +6,7 @@ import logging
 import enum
 import datetime
 import hashlib
-
+import time
 from time import sleep
 
 from collections import OrderedDict
@@ -370,20 +370,14 @@ class NorenApi:
                 return None
 
         #if cover order or high leverage order
-        if product_type == 'H':            
+        if bookloss_price != 0.0:            
             values["blprc"]       = str(bookloss_price)
-            #trailing price
-            if trail_price != 0.0:
-                values["trailprc"] = str(trail_price)
-
-        #bracket order
-        if product_type == 'B':            
-            values["blprc"]       = str(bookloss_price)
+        #trailing price
+        if trail_price != 0.0:
+            values["trailprc"] = str(trail_price)         
+        #book profit of bracket order   
+        if bookprofit_price != 0.0:
             values["bpprc"]       = str(bookprofit_price)
-            #trailing price
-            if trail_price != 0.0:
-                values["trailprc"] = str(trail_price)
-
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
