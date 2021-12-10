@@ -8,15 +8,9 @@ import datetime
 import hashlib
 import time
 from time import sleep
+from datetime import datetime as dt
 
-from collections import OrderedDict
-from collections import namedtuple
-
-
-Instrument = namedtuple('Instrument', ['exchange', 'token', 'symbol',
-                                       'name', 'expiry', 'lot_size'])
 logger = logging.getLogger(__name__)
-
 
 class ProductType:
     Delivery = 'C'
@@ -27,12 +21,6 @@ class ProductType:
 class FeedType:
     TOUCHLINE = 1    
     SNAPQUOTE = 2
-
-class ProductType:
-    Delivery = 'C'
-    Intraday = 'I'
-    Normal   = 'M'
-    CF       = 'M'
     
 class PriceType:
     Market = 'MKT'
@@ -43,14 +31,6 @@ class PriceType:
 class BuyorSell:
     Buy = 'B'
     Sell = 'S'
-
-
-
-#class ProductType(enum.Enum):
-#    Delivery = 'C'
-#    Intraday = 'I'
-#    Normal   = 'M'
-#    CF       = 'M'
     
 def reportmsg(msg):
     #print(msg)
@@ -74,22 +54,25 @@ class NorenApi:
           'cancelorder': '/CancelOrder',
           'exitorder': '/ExitSNOOrder',
           'orderbook': '/OrderBook',
+          'tradebook': '/TradeBook',          
           'singleorderhistory': '/SingleOrdHist',
           'searchscrip': '/SearchScrip',
-          'TPSeries' : '/TPSeries',
+          'TPSeries' : '/TPSeries',     
+          'optionchain' : '/GetOptionChain',     
           'holdings' : '/Holdings',
           'limits' : '/Limits',
           'positions': '/PositionBook',
           'scripinfo': '/GetSecurityInfo',
           'getquotes': '/GetQuotes',
-
       },
-      'websocket_endpoint': 'wss://wsendpoint/'
+      'websocket_endpoint': 'wss://wsendpoint/',
+      'eoddata_endpoint' : 'http://eodhost/'
     }
 
-    def __init__(self, host, websocket):
+    def __init__(self, host, websocket, eodhost):
         self.__service_config['host'] = host
         self.__service_config['websocket_endpoint'] = websocket
+        self.__service_config['eoddata_endpoint'] = eodhost
 
         self.__websocket = None
         self.__websocket_connected = False
@@ -278,6 +261,25 @@ class NorenApi:
 
         #print(data)
         self.__ws_send(data)
+
+    def unsubscribe(self, instrument, feed_type=FeedType.TOUCHLINE):
+        values = {}
+
+        if(feed_type == FeedType.TOUCHLINE):
+            values['t'] =  'ut'
+        elif(feed_type == FeedType.SNAPQUOTE):
+            values['t'] =  'ud'
+        
+        if type(instrument) == list:
+            values['k'] = '#'.join(instrument)
+        else :
+            values['k'] = instrument
+
+        data = json.dumps(values)
+
+        #print(data)
+        self.__ws_send(data)
+
 
     def subscribe_orders(self):
         values = {'t': 'o'}
@@ -496,6 +498,33 @@ class NorenApi:
 
         return resDict
 
+    def get_trade_book(self):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['tradebook']}" 
+        reportmsg(url)
+
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["actid"]     = self.__accountid
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        
+        #error is a json with stat and msg wchih we printed earlier.
+        if type(resDict) != list:                            
+                return None
+
+        return resDict
+
     def searchscrip(self, exchange, searchtext):
         config = NorenApi.__service_config
 
@@ -511,6 +540,36 @@ class NorenApi:
         values["uid"]       = self.__username
         values["exch"]      = exchange
         values["stext"]     = searchtext       
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+
+        if resDict['stat'] != 'Ok':            
+            return None        
+
+        return resDict
+
+    def get_option_chain(self, exchange, tradingsymbol, strikeprice, count=2):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['optionchain']}" 
+        reportmsg(url)
+        
+        
+        values              = {}
+        values["uid"]       = self.__username
+        values["exch"]      = exchange
+        values["tsym"]      = tradingsymbol       
+        values["strprc"]    = str(strikeprice)
+        values["cnt"]       = str(count)       
+        
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
@@ -615,6 +674,43 @@ class NorenApi:
 
         return resDict
 
+    def get_daily_price_series(self, exchange, tradingsymbol, startdate=None, enddate=None):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['eoddata_endpoint']}" 
+        reportmsg(url)
+
+        #prepare the data
+        if startdate == None:  
+            week_ago = datetime.date.today() - datetime.timedelta(days=7)
+            startdate = dt.combine(week_ago, dt.min.time()).timestamp()
+
+        if enddate == None:            
+            enddate = dt.now().timestamp()
+
+        #
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["sym"]      = '{0}:{1}'.format(exchange, tradingsymbol)
+        values["from"]     = str(startdate)
+        values["to"]       = str(enddate)
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        
+        #error is a json with stat and msg wchih we printed earlier.
+        if type(resDict) != list:                            
+                return None
+
+        return resDict
+        
     def get_holdings(self, product_type = None):
         config = NorenApi.__service_config
 
