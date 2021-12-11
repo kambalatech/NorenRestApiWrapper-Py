@@ -49,6 +49,7 @@ class NorenApi:
       'host': 'http://wsapihost/',
       'routes': {
           'authorize': '/QuickAuth',
+          'logout': '/Logout',
           'placeorder': '/PlaceOrder',
           'modifyorder': '/ModifyOrder',
           'cancelorder': '/CancelOrder',
@@ -244,6 +245,34 @@ class NorenApi:
 
         return resDict
 
+    def logout(self):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['logout']}" 
+        reportmsg(url)
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        if resDict['stat'] != 'Ok':            
+            return None
+
+        self.__username   = None
+        self.__accountid  = None
+        self.__password   = None
+        self.__susertoken = None
+
+        return resDict
+
     def subscribe(self, instrument, feed_type=FeedType.TOUCHLINE):
         values = {}
 
@@ -299,7 +328,7 @@ class NorenApi:
 
         #prepare the uri
         url = f"{config['host']}{config['routes']['placeorder']}" 
-        print(url)
+        reportmsg(url)
         #prepare the data
         values              = {'ordersource':'API'}
         values["uid"]       = self.__username
@@ -774,10 +803,7 @@ class NorenApi:
         res = requests.post(url, data=payload)
         reportmsg(res.text)
 
-        resDict = json.loads(res.text)
-
-        if type(resDict) != list:                            
-                return None
+        resDict = json.loads(res.text)        
 
         return resDict
 

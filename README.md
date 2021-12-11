@@ -15,6 +15,7 @@ to build this package and install it on your server please use
 ## API 
 ```NorenApi```
 - [login](#md-login)
+- [logout](#md-logout)
 
 Symbols
 - [searchscrip](#md-searchscrip)
@@ -58,6 +59,13 @@ connect to the broker, only once this function has returned successfully can any
 | vendor_code | ```string``` | False | vendor code shared  |
 | api_secret | ```string``` | False | your secret   |
 | imei | ```string``` | False | imei identification |
+
+#### <a name="md-logout"></a> logout()
+Terminate the session
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+|  No Parameters  |
 
 #### <a name="md-place_order"></a> place_order(buy_or_sell, product_type,exchange, tradingsymbol, quantity, discloseqty, price_type, price=0.0, trigger_price=None, retention='DAY', amo='NO', remarks=None)
 place an order to oms
