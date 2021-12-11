@@ -366,7 +366,7 @@ class NorenApi:
 
         if (newprice_type == 'SL-LMT') or (newprice_type == 'SL-MKT'):
             if (newtrigger_price != None):
-                values["trgprc"] = newtrigger_price                
+                values["trgprc"] = str(newtrigger_price)
             else:
                 reporterror('trigger price is missing')
                 return None
@@ -690,24 +690,31 @@ class NorenApi:
             enddate = dt.now().timestamp()
 
         #
-        values              = {'ordersource':'API'}
+        values              = {}
         values["uid"]       = self.__username
         values["sym"]      = '{0}:{1}'.format(exchange, tradingsymbol)
         values["from"]     = str(startdate)
         values["to"]       = str(enddate)
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
-        
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = json.dumps(values)
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
-        reportmsg(res.text)
+        headers = {"Content-Type": "application/json; charset=utf-8"}
+        res = requests.post(url, data=payload, headers=headers)
+        reportmsg(res)
+
+        if res.status_code != 200:
+            return None
+
+        if len(res.text) == 0:
+            return None
 
         resDict = json.loads(res.text)
         
         #error is a json with stat and msg wchih we printed earlier.
         if type(resDict) != list:                            
-                return None
+            return None
 
         return resDict
         
