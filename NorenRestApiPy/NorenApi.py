@@ -50,6 +50,11 @@ class NorenApi:
       'routes': {
           'authorize': '/QuickAuth',
           'logout': '/Logout',
+          'forgot_password': '/ForgotPassword',
+          'watchlist_names': '/MWList',
+          'watchlist': '/MarketWatch',
+          'watchlist_add': '/AddMultiScripsToMW',
+          'watchlist_delete': '/DeleteMultiMWScrips',
           'placeorder': '/PlaceOrder',
           'modifyorder': '/ModifyOrder',
           'cancelorder': '/CancelOrder',
@@ -153,6 +158,9 @@ class NorenApi:
             if res['t'] == 'tk' or res['t'] == 'tf':
                 self.__subscribe_callback(res)
                 return
+            if res['t'] == 'dk' or res['t'] == 'df':
+                self.__subscribe_callback(res)
+                return
 
         if(self.__on_error is not None):
             if res['t'] == 'ck' and res['s'] != 'OK':
@@ -245,6 +253,38 @@ class NorenApi:
 
         return resDict
 
+    def forgot_password(self, userid, pan, dob):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['forgot_password']}" 
+        reportmsg(url)
+
+        #prepare the data
+        values              = { "source": "API" }
+        values["uid"]       = userid
+        values["pan"]       = pan
+        values["dob"]       = dob
+
+        payload = 'jData=' + json.dumps(values)
+        reportmsg("Req:" + payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg("Reply:" + res.text)
+
+        resDict = json.loads(res.text)
+        
+        if resDict['stat'] != 'Ok':            
+            return None
+        
+        self.__username   = userid
+        self.__accountid  = userid
+        self.__password   = password
+        self.__susertoken = resDict['susertoken']
+        #reportmsg(self.__susertoken)
+
+        return resDict
+
     def logout(self):
         config = NorenApi.__service_config
 
@@ -280,7 +320,9 @@ class NorenApi:
             values['t'] =  't'
         elif(feed_type == FeedType.SNAPQUOTE):
             values['t'] =  'd'
-        
+        else:
+            values['t'] =  str(feed_type)
+
         if type(instrument) == list:
             values['k'] = '#'.join(instrument)
         else :
@@ -318,6 +360,110 @@ class NorenApi:
 
         reportmsg(data)
         self.__ws_send(data)
+
+    def get_watch_list_names(self):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['watchlist_names']}" 
+        reportmsg(url)
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        if resDict['stat'] != 'Ok':            
+            return None
+
+        return resDict
+
+    def get_watch_list(self, wlname):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['watchlist']}" 
+        reportmsg(url)
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["wlname"]    = wlname
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        if resDict['stat'] != 'Ok':            
+            return None
+
+        return resDict
+
+
+    def add_watch_list_scrip(self, wlname, instrument):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['watchlist_add']}" 
+        reportmsg(url)
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["wlname"]    = wlname
+
+        if type(instrument) == list:
+            values['scrips'] = '#'.join(instrument)
+        else :
+            values['scrips'] = instrument
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        if resDict['stat'] != 'Ok':            
+            return None
+
+        return resDict
+
+    def delete_watch_list_scrip(self, wlname, instrument):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['watchlist_delete']}" 
+        reportmsg(url)
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["wlname"]    = wlname
+
+        if type(instrument) == list:
+            values['scrips'] = '#'.join(instrument)
+        else :
+            values['scrips'] = instrument
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        if resDict['stat'] != 'Ok':            
+            return None
+
+        return resDict
 
 
     def place_order(self, buy_or_sell, product_type,
