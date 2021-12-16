@@ -277,12 +277,6 @@ class NorenApi:
         if resDict['stat'] != 'Ok':            
             return None
         
-        self.__username   = userid
-        self.__accountid  = userid
-        self.__password   = password
-        self.__susertoken = resDict['susertoken']
-        #reportmsg(self.__susertoken)
-
         return resDict
 
     def logout(self):
