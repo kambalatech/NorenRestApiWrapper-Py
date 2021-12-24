@@ -59,6 +59,7 @@ class NorenApi:
           'modifyorder': '/ModifyOrder',
           'cancelorder': '/CancelOrder',
           'exitorder': '/ExitSNOOrder',
+          'product_conversion': '/ProductConversion',
           'orderbook': '/OrderBook',
           'tradebook': '/TradeBook',          
           'singleorderhistory': '/SingleOrdHist',
@@ -88,10 +89,6 @@ class NorenApi:
         self.__on_open = None
         self.__subscribe_callback = None
         self.__order_update_callback = None
-        self.__market_status_messages_callback = None
-        self.__exchange_messages_callback = None
-        self.__oi_callback = None
-        self.__dpr_callback = None
         self.__subscribers = {}
         self.__market_status_messages = []
         self.__exchange_messages = []
@@ -126,8 +123,7 @@ class NorenApi:
 
         #prepare the data
         values              = { "t": "c" }
-        values["uid"]       = self.__username
-        values["pwd"]       = self.__password
+        values["uid"]       = self.__username        
         values["actid"]     = self.__username
         values["susertoken"]    = self.__susertoken
         values["source"]    = 'API'                
@@ -182,22 +178,14 @@ class NorenApi:
                         order_update_callback = None,
                         socket_open_callback = None,
                         socket_close_callback = None,
-                        socket_error_callback = None,
-                        run_in_background=True,
-                        market_status_messages_callback = None,
-                        exchange_messages_callback = None,
-                        oi_callback = None,
-                        dpr_callback = None):        
+                        socket_error_callback = None):        
         """ Start a websocket connection for getting live data """
         self.__on_open = socket_open_callback
         self.__on_disconnect = socket_close_callback
         self.__on_error = socket_error_callback
         self.__subscribe_callback = subscribe_callback
         self.__order_update_callback = order_update_callback
-        self.__market_status_messages_callback = market_status_messages_callback
-        self.__exchange_messages_callback = exchange_messages_callback
-        self.__oi_callback = oi_callback
-        self.__dpr_callback = dpr_callback
+        
         url = self.__service_config['websocket_endpoint'].format(access_token=self.__susertoken)
         reportmsg('connecting to {}'.format(url))
 
@@ -252,6 +240,17 @@ class NorenApi:
         #reportmsg(self.__susertoken)
 
         return resDict
+
+    def set_session(self, userid, password, usertoken):
+        
+        self.__username   = userid
+        self.__accountid  = userid
+        self.__password   = password
+        self.__susertoken = usertoken
+
+        reportmsg(f'{userid} session set to : {self.__susertoken}')
+
+        return True
 
     def forgot_password(self, userid, pan, dob):
         config = NorenApi.__service_config
@@ -344,7 +343,6 @@ class NorenApi:
 
         #print(data)
         self.__ws_send(data)
-
 
     def subscribe_orders(self):
         values = {'t': 'o'}
@@ -614,6 +612,43 @@ class NorenApi:
 
         return resDict
 
+    def position_product_conversion(self, exchange, tradingsymbol, quantity, new_product_type, previous_product_type, buy_or_sell, day_or_cf):
+        '''
+        Coverts a day or carryforward position from one product to another. 
+        '''
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['product_conversion']}" 
+        print(url)
+
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["actid"]     = self.__accountid        
+        values["exch"]      = exchange
+        values["tsym"]      = tradingsymbol
+        values["qty"]       = str(quantity)
+        values["prd"]       = new_product_type
+        values["prevprd"]   = previous_product_type
+        values["trantype"]  = buy_or_sell
+        values["postype"]   = day_or_cf
+        
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        
+        if resDict['stat'] != 'Ok':            
+            return None
+
+        return resDict
+
+
     def single_order_history(self, orderno):
         config = NorenApi.__service_config
 
@@ -806,7 +841,11 @@ class NorenApi:
 
         return resDict
 
-    def get_time_price_series(self, exchange, token, starttime=None, endtime=None):
+    def get_time_price_series(self, exchange, token, starttime=None, endtime=None, interval= None):
+        '''
+        gets the chart data 
+        interval possible values 1, 3, 5 , 10, 15, 30, 60, 120, 240
+        '''
         config = NorenApi.__service_config
 
         #prepare the uri
@@ -827,7 +866,9 @@ class NorenApi:
         values["st"] = str(starttime)
         if endtime != None:
             values["et"]   = str(endtime)
-        
+        if interval != None:
+            values["intrv"] = str(interval)
+
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
         reportmsg(payload)
