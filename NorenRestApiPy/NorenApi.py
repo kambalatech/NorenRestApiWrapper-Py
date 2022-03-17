@@ -7,6 +7,7 @@ import enum
 import datetime
 import hashlib
 import time
+import urllib
 from time import sleep
 from datetime import datetime as dt
 
@@ -330,7 +331,7 @@ class NorenApi:
         values = {}
 
         if(feed_type == FeedType.TOUCHLINE):
-            values['t'] =  'ut'
+            values['t'] =  'u'
         elif(feed_type == FeedType.SNAPQUOTE):
             values['t'] =  'ud'
         
@@ -474,7 +475,7 @@ class NorenApi:
         values["trantype"]  = buy_or_sell
         values["prd"]       = product_type
         values["exch"]      = exchange
-        values["tsym"]      = tradingsymbol
+        values["tsym"]      = urllib.parse.quote_plus(tradingsymbol)
         values["qty"]       = str(quantity)
         values["dscqty"]    = str(discloseqty)        
         values["prctyp"]    = price_type
@@ -526,7 +527,7 @@ class NorenApi:
         values["actid"]         = self.__accountid
         values["norenordno"]    = orderno
         values["exch"]          = exchange
-        values["tsym"]          = tradingsymbol
+        values["tsym"]          = urllib.parse.quote_plus(tradingsymbol)
         values["qty"]           = str(newquantity)
         values["prctyp"]        = newprice_type        
         values["prc"]           = str(newprice)
@@ -627,7 +628,7 @@ class NorenApi:
         values["uid"]       = self.__username
         values["actid"]     = self.__accountid        
         values["exch"]      = exchange
-        values["tsym"]      = tradingsymbol
+        values["tsym"]      = urllib.parse.quote_plus(tradingsymbol)
         values["qty"]       = str(quantity)
         values["prd"]       = new_product_type
         values["prevprd"]   = previous_product_type
@@ -743,7 +744,7 @@ class NorenApi:
         values              = {}
         values["uid"]       = self.__username
         values["exch"]      = exchange
-        values["stext"]     = searchtext       
+        values["stext"]     = urllib.parse.quote_plus(searchtext)       
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         
@@ -770,7 +771,7 @@ class NorenApi:
         values              = {}
         values["uid"]       = self.__username
         values["exch"]      = exchange
-        values["tsym"]      = tradingsymbol       
+        values["tsym"]      = urllib.parse.quote_plus(tradingsymbol)       
         values["strprc"]    = str(strikeprice)
         values["cnt"]       = str(count)       
         
