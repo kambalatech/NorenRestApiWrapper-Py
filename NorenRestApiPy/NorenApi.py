@@ -975,7 +975,7 @@ class NorenApi:
         if product_type != None:
             values["seg"]       = segment       
         
-        if product_type != None:
+        if exchange != None:
             values["exch"]       = exchange       
         
         payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
