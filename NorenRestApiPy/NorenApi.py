@@ -96,7 +96,7 @@ class NorenApi:
 
     def __ws_run_forever(self):
         
-        while True:
+        while self.__stop_event.is_set() == False:
             try:
                 self.__websocket.run_forever( ping_interval=3,  ping_payload='{"t":"h"}')
             except Exception as e:
@@ -116,6 +116,7 @@ class NorenApi:
         reportmsg(wsapp)
 
         self.__websocket_connected = False
+        
         if self.__on_disconnect:
             self.__on_disconnect()
 
@@ -186,7 +187,7 @@ class NorenApi:
         self.__on_error = socket_error_callback
         self.__subscribe_callback = subscribe_callback
         self.__order_update_callback = order_update_callback
-        
+        self.__stop_event = threading.Event()
         url = self.__service_config['websocket_endpoint'].format(access_token=self.__susertoken)
         reportmsg('connecting to {}'.format(url))
 
@@ -203,7 +204,14 @@ class NorenApi:
         self.__ws_thread.daemon = True
         self.__ws_thread.start()
         
-    
+    def close_websocket(self):
+        if self.__websocket_connected == False:
+            return
+        self.__stop_event.set()        
+        self.__websocket_connected = False
+        self.__websocket.close()
+        self.__ws_thread.join()
+
     def login(self, userid, password, twoFA, vendor_code, api_secret, imei):
         config = NorenApi.__service_config
 
