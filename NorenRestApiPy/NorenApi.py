@@ -52,6 +52,7 @@ class NorenApi:
           'authorize': '/QuickAuth',
           'logout': '/Logout',
           'forgot_password': '/ForgotPassword',
+          'change_password': '/Changepwd',
           'watchlist_names': '/MWList',
           'watchlist': '/MarketWatch',
           'watchlist_add': '/AddMultiScripsToMW',
@@ -116,7 +117,6 @@ class NorenApi:
         reportmsg(wsapp)
 
         self.__websocket_connected = False
-        
         if self.__on_disconnect:
             self.__on_disconnect()
 
