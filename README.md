@@ -38,6 +38,10 @@ Holdings and Limits
 - [get_positions](#md-get_positions)
 - [get_limits](#md-get_limits)
 
+Calculators
+- [span_calculator](#md-span_calculator)
+- [get_option_greek](#md-get_option_greek)
+
 Websocket API
 - [start_websocket](#md-start_websocket)
 - [subscribe](#md-subscribe)
@@ -331,6 +335,36 @@ the response is as follows,
 |request_time| ```string``` | True |This will be present only in a successful response.|
 |emsg| ```string``` | True |This will be present only in a failure response.|
 
+
+
+#### <a name="md-span_calculator"></a> span_calculator
+it will figure out margin requirements even before you take a trade. 
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| prd | ```string``` | False | retreives the delivery holdings or for a given product |
+| exch | ```string``` | False | Exchange NSE  / NFO / BSE / CDS  |
+| instname | ```string``` | False |Instrument name |
+| symname| ```string``` | False |Symbol name|
+| exd| ```integer``` | False | Expiry Date |
+| optt | ```string``` | False | Option Type |
+| strprc | ```float``` | False | Strike price|
+| buyqty | ```integer``` | False | Buy Open Quantity |
+| sellqty | ```integer``` | False | Sell Open Quantity|
+| netqty | ```integer``` | False | Net traded quantity|
+
+
+#### <a name="md-get_option_greek"></a>get_option_greek(self,expiredate,StrikePrice,SpotPrice,InitRate,Volatility,OptionType)
+Options Greeks assess the impact of factors such as the underlying security’s price movement, time decay, and volatility on the option’s value.
+
+| Param | Type | Optional |Description |
+| --- | --- | --- | ---|
+| expiredate | ```integer``` | False |Expiry Date |
+| StrikePrice | ```integer``` | False |Strike price |
+| SpotPrice | ```integer``` | False | Spot Price |
+| InitRate | ```integer``` | False | Init Rate|
+| Volatility | ```integer``` | False | Volatility |
+| OptionType | ```integer``` | True | Option Type |
 
 #### <a name="md-searchscrip"></a> searchscrip(exchange, searchtext):
 search for scrip or contract and its properties  
