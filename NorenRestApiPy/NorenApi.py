@@ -13,6 +13,20 @@ from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
 
+class position:
+    prd:str
+    exch:str
+    instname:str
+    symname:str
+    exd:int
+    optt:str
+    strprc:float
+    buyqty:int
+    sellqty:int
+    netqty:int
+    def encode(self):
+        return self.__dict__
+
 class ProductType:
     Delivery = 'C'
     Intraday = 'I'
@@ -73,6 +87,8 @@ class NorenApi:
           'positions': '/PositionBook',
           'scripinfo': '/GetSecurityInfo',
           'getquotes': '/GetQuotes',
+          'span_calculator' :'/SpanCalc',
+          'option_greek' :'/GetOptionGreek',     
       },
       'websocket_endpoint': 'wss://wsendpoint/',
       'eoddata_endpoint' : 'http://eodhost/'
@@ -1022,3 +1038,49 @@ class NorenApi:
 
         return resDict
 
+    def span_calculator(self,actid,positions:list):
+        config = NorenApi.__service_config
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['span_calculator']}" 
+        reportmsg(url) 
+
+        senddata = {}
+        senddata['actid'] =self.__accountid 
+        senddata['pos'] = positions
+        payload = 'jData=' + json.dumps(senddata,default=lambda o: o.encode())+ f'&jKey={self.__susertoken}'
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)        
+
+        return resDict
+        
+    def option_greek(self,expiredate,StrikePrice,SpotPrice,InitRate,Volatility,OptionType):
+        config = NorenApi.__service_config 
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['option_greek']}" 
+        reportmsg(url)
+
+        #prepare the data
+        values               = { "source": "API" }
+        values["actid"]     = self.__accountid
+        values["exd"]        = expiredate
+        values["strprc"]     = StrikePrice 
+        values["sptprc"]     = SpotPrice
+        values["int_rate"]   = InitRate
+        values["volatility"] = Volatility
+        values["optt"]       = OptionType
+
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)        
+
+        return resDict
