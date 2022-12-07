@@ -88,16 +88,17 @@ class NorenApi:
           'scripinfo': '/GetSecurityInfo',
           'getquotes': '/GetQuotes',
           'span_calculator' :'/SpanCalc',
-          'option_greek' :'/GetOptionGreek',     
+          'option_greek' :'/GetOptionGreek',
+          'get_daily_price_series' :'/EODChartData',      
       },
       'websocket_endpoint': 'wss://wsendpoint/',
-      'eoddata_endpoint' : 'http://eodhost/'
+      #'eoddata_endpoint' : 'http://eodhost/'
     }
 
     def __init__(self, host, websocket, eodhost):
         self.__service_config['host'] = host
         self.__service_config['websocket_endpoint'] = websocket
-        self.__service_config['eoddata_endpoint'] = eodhost
+        #self.__service_config['eoddata_endpoint'] = eodhost
 
         self.__websocket = None
         self.__websocket_connected = False
@@ -913,7 +914,8 @@ class NorenApi:
         config = NorenApi.__service_config
 
         #prepare the uri
-        url = f"{config['eoddata_endpoint']}" 
+        #url = f"{config['eoddata_endpoint']}" 
+        url = f"{config['host']}{config['routes']['get_daily_price_series']}" 
         reportmsg(url)
 
         #prepare the data
@@ -931,8 +933,8 @@ class NorenApi:
         values["from"]     = str(startdate)
         values["to"]       = str(enddate)
         
-        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
-        payload = json.dumps(values)
+        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = json.dumps(values)
         reportmsg(payload)
 
         headers = {"Content-Type": "application/json; charset=utf-8"}
