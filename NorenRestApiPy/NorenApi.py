@@ -95,7 +95,7 @@ class NorenApi:
       #'eoddata_endpoint' : 'http://eodhost/'
     }
 
-    def __init__(self, host, websocket, eodhost):
+    def __init__(self, host, websocket):
         self.__service_config['host'] = host
         self.__service_config['websocket_endpoint'] = websocket
         #self.__service_config['eoddata_endpoint'] = eodhost
