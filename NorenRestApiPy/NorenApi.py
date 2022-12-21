@@ -1059,7 +1059,7 @@ class NorenApi:
 
         return resDict
         
-    def option_greek(self,expiredate,StrikePrice,SpotPrice,InitRate,Volatility,OptionType):
+    def option_greek(self,expiredate,StrikePrice,SpotPrice,InterestRate,Volatility,OptionType):
         config = NorenApi.__service_config 
 
         #prepare the uri
@@ -1072,7 +1072,7 @@ class NorenApi:
         values["exd"]        = expiredate
         values["strprc"]     = StrikePrice 
         values["sptprc"]     = SpotPrice
-        values["int_rate"]   = InitRate
+        values["int_rate"]   = InterestRate	
         values["volatility"] = Volatility
         values["optt"]       = OptionType
 
