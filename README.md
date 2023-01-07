@@ -2401,7 +2401,27 @@ Modify GTT OCO Market order by changing the price condition above and below for 
     print("===================================")
 
 ```
+### Cancel GTT orders
 
+Cancel GTT orders example codes are below.
+
+```python 
+    alert_id = 23010700000205
+    resp = api.cancelgtt(alert_id)
+    time.sleep(1.0)
+    resp = api.get_pending_gtt_orders()
+    print("===================================")
+    print("Pending GTT orders\n", resp)
+    print("===================================")
+
+    # Cancel all pending GTT orders
+    for i in range(0, len(resp)):
+        print(
+            f'Cancelled GTT Order/Alert - Alert Id :: {api.cancelgtt(resp[i]["al_id"])}'
+        )
+
+
+```
 
 ****
 
