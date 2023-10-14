@@ -2323,6 +2323,106 @@ while(feed_opened==False):
 
 ```
 
+### Place GTT Order
+
+Placing GTT order example is shown below.
+
+```python
+    alert_id = api.place_gtt_order(
+        "SBIN-EQ",
+        "NSE",
+        api.ALERT_TYPE_BELOW,
+        573.4,
+        "S",
+        "I",
+        5,
+        "LMT",
+        575.3,
+        "checking gtt below",
+    )
+    print("===================================")
+    print(f"Alert ID for GTT Order :: {alert_id}")
+    print("===================================")
+
+```
+
+### Get Pending GTT orders
+
+Get list of pendingg GTT orders
+
+```python
+    resp = api.get_pending_gtt_orders()
+    print(resp)
+    if len(resp) > 0:
+        print(resp[0]['al_id']) # Alert Id or Order Id
+```
+
+### Place GTT OCO (One Cancel Other) Market Order
+
+Following is the example code for place OCO GTT Market order
+
+```python
+    alert_id = api.place_gtt_oco_mkt_order(
+        "SILVERMIC28FEB23",
+        "MCX",
+        69200.0,
+        69000.0,
+        api.TRANSACTION_TYPE_SELL,
+        api.PRODUCT_TYPE_INTRADAY,
+        1,
+    )
+    print("===================================")
+
+    print("===================================")
+    print(f"Alert ID for GTT OCO MKT Order :: {alert_id}")
+    print("===================================")
+
+```
+
+### Modify GTT OCO (One Cancel Other) Market Order
+
+Modify GTT OCO Market order by changing the price condition above and below for a given Alert Id (`al_id`)
+
+```python
+    # alert_id - can be extracted using place_gtt_oco_mkt_order method see example above.
+    alert_id = api.modify_gtt_oco_mkt_order(
+        "SILVERMIC28FEB23",
+        "MCX",
+        alert_id,
+        69500.0,
+        69100.0,
+        api.TRANSACTION_TYPE_SELL,
+        api.PRODUCT_TYPE_INTRADAY,
+        1
+    )
+
+    print("===================================")
+    print(f"Alert ID for Modified GTT OCO MKT Order :: {alert_id}")
+    print("===================================")
+
+```
+### Cancel GTT orders
+
+Cancel GTT orders example codes are below.
+
+```python 
+    alert_id = 23010700000205
+    resp = api.cancelgtt(alert_id)
+    time.sleep(1.0)
+    resp = api.get_pending_gtt_orders()
+    print("===================================")
+    print("Pending GTT orders\n", resp)
+    print("===================================")
+
+    # Cancel all pending GTT orders
+    for i in range(0, len(resp)):
+        print(
+            f'Cancelled GTT Order/Alert - Alert Id :: {api.cancelgtt(resp[i]["al_id"])}'
+        )
+
+
+```
+
 ****
 
 ## Author
