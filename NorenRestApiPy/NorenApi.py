@@ -487,7 +487,7 @@ class NorenApi:
     def place_order(self, buy_or_sell, product_type,
                     exchange, tradingsymbol, quantity, discloseqty,
                     price_type, price=0.0, trigger_price=None,
-                    retention='DAY', amo='NO', remarks=None, bookloss_price = 0.0, bookprofit_price = 0.0, trail_price = 0.0):
+                    retention='DAY', amo=None, remarks=None, bookloss_price = 0.0, bookprofit_price = 0.0, trail_price = 0.0):
         config = NorenApi.__service_config
 
         #prepare the uri
@@ -508,7 +508,9 @@ class NorenApi:
         values["trgprc"]    = str(trigger_price)
         values["ret"]       = retention
         values["remarks"]   = remarks
-        values["amo"]       = amo
+      
+        if amo is not None:
+           values["amo"]       = amo
         
         #if cover order or high leverage order
         if product_type == 'H':            
