@@ -229,7 +229,7 @@ class NorenApi:
         self.__websocket.close()
         self.__ws_thread.join()
 
-    def login(self, userid, password, twoFA, vendor_code, api_secret, imei):
+    def login(self, userid, password, twoFA, vendor_code, api_secret, imei,access_type=None):
         config = NorenApi.__service_config
 
         #prepare the uri
@@ -241,7 +241,10 @@ class NorenApi:
         u_app_key = '{0}|{1}'.format(userid, api_secret)
         app_key=hashlib.sha256(u_app_key.encode('utf-8')).hexdigest()
         #prepare the data
-        values              = { "source": "API" , "apkversion": "1.0.0"}
+        if access_type == None:
+            values = { "source": "API" , "apkversion": "1.0.0"}
+        else:
+            values = { "source": access_type , "apkversion": "1.0.0"}
         values["uid"]       = userid
         values["pwd"]       = pwd
         values["factor2"]   = twoFA
