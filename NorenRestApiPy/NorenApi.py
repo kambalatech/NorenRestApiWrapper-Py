@@ -89,7 +89,8 @@ class NorenApi:
           'getquotes': '/GetQuotes',
           'span_calculator' :'/SpanCalc',
           'option_greek' :'/GetOptionGreek',
-          'get_daily_price_series' :'/EODChartData',      
+          'get_daily_price_series' :'/EODChartData',
+          'forgot_password_OTP':'/FgtPwdOTP',   
       },
       'websocket_endpoint': 'wss://wsendpoint/',
       #'eoddata_endpoint' : 'http://eodhost/'
@@ -1091,3 +1092,25 @@ class NorenApi:
         resDict = json.loads(res.text)        
 
         return resDict
+   
+    def forgot_password_OTP(self, userid, pan):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['forgot_password_OTP']}" 
+        reportmsg(url)
+
+        #prepare the data
+        values              = { "source": "API" }
+        values["uid"]       = userid
+        values["pan"]       = pan
+
+        payload = 'jData=' + json.dumps(values)
+        reportmsg("Req:" + payload)
+        
+        res = requests.post(url, data=payload)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)        
+
+        return resDict        
