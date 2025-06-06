@@ -90,7 +90,8 @@ class NorenApi:
           'span_calculator' :'/SpanCalc',
           'option_greek' :'/GetOptionGreek',
           'get_daily_price_series' :'/EODChartData',
-          'forgot_password_OTP':'/FgtPwdOTP',   
+          'forgot_password_OTP':'/FgtPwdOTP',
+          'gen_acs_tok':'/GenAcsTok'
       },
       'websocket_endpoint': 'wss://wsendpoint/',
       #'eoddata_endpoint' : 'http://eodhost/'
@@ -112,6 +113,7 @@ class NorenApi:
         self.__subscribers = {}
         self.__market_status_messages = []
         self.__exchange_messages = []
+        self.__OAuthHeaders=None
 
     def __ws_run_forever(self):
         
@@ -230,6 +232,60 @@ class NorenApi:
         self.__websocket.close()
         self.__ws_thread.join()
 
+    ###### OAuth Update ###### 
+    def getOAuthURL(self, oauth_url, api_key=None): 
+        default_login_uri = oauth_url 
+        return "%s?api_key=%s" % (default_login_uri, api_key)
+
+    def injectOAuthHeader(self,access_token,UID,AID): 
+        headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json; charset=utf-8"
+        }
+        self.__OAuthHeaders = headers
+        self.__username   = UID
+        self.__accountid  = AID
+        return headers
+    
+    def getAccessToken(self, authcode, SECRET_KEY, APP_KEY, UID): 
+        config = NorenApi.__service_config
+        AcsTokURL = f"{config['host']}{config['routes']['gen_acs_tok']}" 
+        reportmsg(AcsTokURL)
+        GenAcsTokURL=AcsTokURL
+        data_to_hash = (APP_KEY + SECRET_KEY + authcode).encode("utf-8")
+        app_verifier = hashlib.sha256(data_to_hash).hexdigest()
+
+        values = {
+            "auth_code": authcode,
+            "app_verifier": app_verifier,
+            "uid": UID
+        }
+
+        payload = 'jData=' + json.dumps(values)
+        reportmsg("Req:" + payload)
+
+        res = requests.post(GenAcsTokURL, data=payload)
+        reportmsg("Reply:" + res.text)
+        resDict = json.loads(res.text)
+        if "acs_tok" in resDict:
+            access_token = resDict['acs_tok']
+            usrid = resDict['USERID']
+            ref_tok = resDict['ref_tok']
+            actid = resDict['actid']
+            self.__username   = usrid
+            self.__accountid  = actid
+            self.__susertoken = resDict['susertoken']
+            injected_headers = self.injectOAuthHeader(access_token,usrid,actid)
+            return access_token , usrid , ref_tok, actid
+
+        
+        else:
+            reportmsg("Error occured: " + resDict)
+            return None
+      
+    ###### OAuth Update ###### 
+
+    """
     def login(self, userid, password, twoFA, vendor_code, api_secret, imei,access_type=None):
         config = NorenApi.__service_config
 
@@ -270,7 +326,8 @@ class NorenApi:
         #reportmsg(self.__susertoken)
 
         return resDict
-
+    """
+        
     def set_session(self, userid, password, usertoken):
         
         self.__username   = userid
@@ -318,11 +375,12 @@ class NorenApi:
         values              = {'ordersource':'API'}
         values["uid"]       = self.__username
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
-        
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
+
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -393,11 +451,12 @@ class NorenApi:
         values              = {'ordersource':'API'}
         values["uid"]       = self.__username
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -417,11 +476,12 @@ class NorenApi:
         values["uid"]       = self.__username
         values["wlname"]    = wlname
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -446,11 +506,12 @@ class NorenApi:
             values['scrips'] = '#'.join(instrument)
         else :
             values['scrips'] = instrument
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'   
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -474,11 +535,12 @@ class NorenApi:
             values['scrips'] = '#'.join(instrument)
         else :
             values['scrips'] = instrument
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -531,11 +593,12 @@ class NorenApi:
             if trail_price != 0.0:
                 values["trailprc"] = str(trail_price)
 
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -580,11 +643,12 @@ class NorenApi:
         if bookprofit_price != 0.0:
             values["bpprc"]       = str(bookprofit_price)
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -605,11 +669,12 @@ class NorenApi:
         values["uid"]       = self.__username
         values["norenordno"]    = str(orderno)
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         print(res.text)
 
         resDict = json.loads(res.text)
@@ -631,11 +696,12 @@ class NorenApi:
         values["norenordno"]    = orderno
         values["prd"]           = product_type
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -666,11 +732,12 @@ class NorenApi:
         values["trantype"]  = buy_or_sell
         values["postype"]   = day_or_cf
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -693,11 +760,12 @@ class NorenApi:
         values["uid"]       = self.__username
         values["norenordno"]    = orderno
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -719,11 +787,12 @@ class NorenApi:
         values              = {'ordersource':'API'}
         values["uid"]       = self.__username
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -746,11 +815,12 @@ class NorenApi:
         values["uid"]       = self.__username
         values["actid"]     = self.__accountid
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -777,11 +847,12 @@ class NorenApi:
         values["exch"]      = exchange
         values["stext"]     = urllib.parse.quote_plus(searchtext)       
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -807,11 +878,12 @@ class NorenApi:
         values["cnt"]       = str(count)       
         
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -833,11 +905,12 @@ class NorenApi:
         values["exch"]      = exchange
         values["token"]     = token       
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -859,11 +932,12 @@ class NorenApi:
         values["exch"]      = exchange
         values["token"]     = token       
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -901,11 +975,12 @@ class NorenApi:
         if interval != None:
             values["intrv"] = str(interval)
 
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -939,12 +1014,13 @@ class NorenApi:
         values["from"]     = str(startdate)
         values["to"]       = str(enddate)
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
-        #payload = json.dumps(values)
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
+
         reportmsg(payload)
 
-        headers = {"Content-Type": "application/json; charset=utf-8"}
-        res = requests.post(url, data=payload, headers=headers)
+        #headers = {"Content-Type": "application/json; charset=utf-8"}
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res)
 
         if res.status_code != 200:
@@ -976,11 +1052,12 @@ class NorenApi:
         values["actid"]     = self.__accountid
         values["prd"]       = product_type       
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
-        
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
+
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -1010,11 +1087,12 @@ class NorenApi:
         if exchange != None:
             values["exch"]       = exchange       
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)        
@@ -1032,11 +1110,12 @@ class NorenApi:
         values["uid"]       = self.__username
         values["actid"]     = self.__accountid
         
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
         
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)
@@ -1055,10 +1134,12 @@ class NorenApi:
         senddata = {}
         senddata['actid'] =self.__accountid 
         senddata['pos'] = positions
-        payload = 'jData=' + json.dumps(senddata,default=lambda o: o.encode())+ f'&jKey={self.__susertoken}'
+        #payload = 'jData=' + json.dumps(senddata,default=lambda o: o.encode())+ f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(senddata,default=lambda o: o.encode())
+
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)        
@@ -1082,11 +1163,12 @@ class NorenApi:
         values["volatility"] = Volatility
         values["optt"]       = OptionType
 
-        payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
-        
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
+
         reportmsg(payload)
 
-        res = requests.post(url, data=payload)
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
         reportmsg(res.text)
 
         resDict = json.loads(res.text)        
