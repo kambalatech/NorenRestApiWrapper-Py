@@ -235,7 +235,7 @@ class NorenApi:
     ###### OAuth Update ###### 
     def getOAuthURL(self, oauth_url, api_key=None): 
         default_login_uri = oauth_url 
-        return "%s?api_key=%s" % (default_login_uri, api_key)
+        return "%s?client_id=%s" % (default_login_uri, api_key)
 
     def injectOAuthHeader(self,access_token,UID,AID): 
         headers = {
@@ -256,8 +256,8 @@ class NorenApi:
         app_verifier = hashlib.sha256(data_to_hash).hexdigest()
 
         values = {
-            "auth_code": authcode,
-            "app_verifier": app_verifier,
+            "code": authcode,
+            "checksum": app_verifier,
             "uid": UID
         }
 
@@ -265,12 +265,12 @@ class NorenApi:
         reportmsg("Req:" + payload)
 
         res = requests.post(GenAcsTokURL, data=payload)
-        reportmsg("Reply:" + res.text)
+        reportmsg("Response:" + res.text)
         resDict = json.loads(res.text)
-        if "acs_tok" in resDict:
-            access_token = resDict['acs_tok']
+        if "access_token" in resDict:
+            access_token = resDict['access_token']
             usrid = resDict['USERID']
-            ref_tok = resDict['ref_tok']
+            ref_tok = resDict['refresh_token']
             actid = resDict['actid']
             self.__username   = usrid
             self.__accountid  = actid
@@ -278,10 +278,10 @@ class NorenApi:
             injected_headers = self.injectOAuthHeader(access_token,usrid,actid)
             return access_token , usrid , ref_tok, actid
 
-        
-        else:
-            reportmsg("Error occured: " + resDict)
+        else:        
+            reportmsg(f"Error occured: {resDict}")
             return None
+
       
     ###### OAuth Update ###### 
 
