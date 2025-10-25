@@ -101,7 +101,9 @@ class NorenApi:
         self.__service_config['host'] = host
         self.__service_config['websocket_endpoint'] = websocket
         #self.__service_config['eoddata_endpoint'] = eodhost
-
+        self.__access_token = None
+        self.__username = None
+        self.__accountid = None        
         self.__websocket = None
         self.__websocket_connected = False
         self.__ws_mutex = threading.Lock()
@@ -113,7 +115,8 @@ class NorenApi:
         self.__subscribers = {}
         self.__market_status_messages = []
         self.__exchange_messages = []
-        self.__OAuthHeaders=None
+        self.__OAuthHeaders = None
+
 
     def __ws_run_forever(self):
         
@@ -132,6 +135,7 @@ class NorenApi:
             ret = self.__websocket.send(*args, **kwargs)
         return ret
 
+
     def __on_close_callback(self, wsapp, close_status_code, close_msg):
         reportmsg(close_status_code)
         reportmsg(wsapp)
@@ -139,16 +143,22 @@ class NorenApi:
         self.__websocket_connected = False
         if self.__on_disconnect:
             self.__on_disconnect()
+    
+    def set_credentials(self, access_token, uid, accountid):
+        self.__access_token = access_token
+        self.__username = uid
+        self.__accountid = accountid
 
     def __on_open_callback(self, ws=None):
         self.__websocket_connected = True
 
         #prepare the data
-        values              = { "t": "c" }
+        values              = { "t": "a" }
         values["uid"]       = self.__username        
         values["actid"]     = self.__username
-        values["susertoken"]    = self.__susertoken
-        values["source"]    = 'API'                
+        values["accesstoken"]    = self.__access_token
+        values["source"]    = 'API'   
+           
 
         payload = json.dumps(values)
 
@@ -208,7 +218,7 @@ class NorenApi:
         self.__subscribe_callback = subscribe_callback
         self.__order_update_callback = order_update_callback
         self.__stop_event = threading.Event()
-        url = self.__service_config['websocket_endpoint'].format(access_token=self.__susertoken)
+        url = self.__service_config['websocket_endpoint'].format(access_token = self.__access_token)
         reportmsg('connecting to {}'.format(url))
 
         self.__websocket = websocket.WebSocketApp(url,
@@ -247,12 +257,12 @@ class NorenApi:
         self.__accountid  = AID
         return headers
     
-    def getAccessToken(self, authcode, SECRET_KEY, APP_KEY, UID): 
+    def getAccessToken(self, authcode, Secret_Code, clinet_id, UID): 
         config = NorenApi.__service_config
         AcsTokURL = f"{config['host']}{config['routes']['gen_acs_tok']}" 
         reportmsg(AcsTokURL)
         GenAcsTokURL=AcsTokURL
-        data_to_hash = (APP_KEY + SECRET_KEY + authcode).encode("utf-8")
+        data_to_hash = (clinet_id + Secret_Code + authcode).encode("utf-8")
         app_verifier = hashlib.sha256(data_to_hash).hexdigest()
 
         values = {
@@ -268,15 +278,17 @@ class NorenApi:
         reportmsg("Response:" + res.text)
         resDict = json.loads(res.text)
         if "access_token" in resDict:
-            access_token = resDict['access_token']
+            asc_tok = resDict['access_token']
             usrid = resDict['USERID']
             ref_tok = resDict['refresh_token']
             actid = resDict['actid']
+            self.__susertoken = resDict['susertoken']
+
             self.__username   = usrid
             self.__accountid  = actid
-            self.__susertoken = resDict['susertoken']
-            injected_headers = self.injectOAuthHeader(access_token,usrid,actid)
-            return access_token , usrid , ref_tok, actid
+            self.__access_token = asc_tok
+            self.injectOAuthHeader(asc_tok,usrid,actid)
+            return asc_tok , usrid , ref_tok, actid
 
         else:        
             reportmsg(f"Error occured: {resDict}")
@@ -295,8 +307,8 @@ class NorenApi:
 
         #Convert to SHA 256 for password and app key
         pwd = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        u_app_key = '{0}|{1}'.format(userid, api_secret)
-        app_key=hashlib.sha256(u_app_key.encode('utf-8')).hexdigest()
+        u_clinet_id = '{0}|{1}'.format(userid, api_secret)
+        clinet_id=hashlib.sha256(u_clinet_id.encode('utf-8')).hexdigest()
         #prepare the data
         if access_type == None:
             values = { "source": "API" , "apkversion": "1.0.0"}
@@ -306,7 +318,7 @@ class NorenApi:
         values["pwd"]       = pwd
         values["factor2"]   = twoFA
         values["vc"]        = vendor_code
-        values["appkey"]    = app_key        
+        values["appkey"]    = clinet_id        
         values["imei"]      = imei        
 
         payload = 'jData=' + json.dumps(values)
@@ -328,12 +340,13 @@ class NorenApi:
         return resDict
     """
         
-    def set_session(self, userid, password, usertoken):
+    def set_session(self, userid, password, usertoken,accesstoken):
         
         self.__username   = userid
         self.__accountid  = userid
         self.__password   = password
         self.__susertoken = usertoken
+        self.__access_token = accesstoken
 
         reportmsg(f'{userid} session set to : {self.__susertoken}')
 
@@ -391,6 +404,7 @@ class NorenApi:
         self.__accountid  = None
         self.__password   = None
         self.__susertoken = None
+        self.__access_token = None
 
         return resDict
 
@@ -1195,4 +1209,4 @@ class NorenApi:
 
         resDict = json.loads(res.text)        
 
-        return resDict        
+        return resDict
