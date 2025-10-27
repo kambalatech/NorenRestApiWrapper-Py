@@ -257,12 +257,12 @@ class NorenApi:
         self.__accountid  = AID
         return headers
     
-    def getAccessToken(self, authcode, Secret_Code, clinet_id, UID): 
+    def getAccessToken(self, authcode, Secret_Code, client_id, UID): 
         config = NorenApi.__service_config
         AcsTokURL = f"{config['host']}{config['routes']['gen_acs_tok']}" 
         reportmsg(AcsTokURL)
         GenAcsTokURL=AcsTokURL
-        data_to_hash = (clinet_id + Secret_Code + authcode).encode("utf-8")
+        data_to_hash = (client_id + Secret_Code + authcode).encode("utf-8")
         app_verifier = hashlib.sha256(data_to_hash).hexdigest()
 
         values = {
@@ -307,8 +307,8 @@ class NorenApi:
 
         #Convert to SHA 256 for password and app key
         pwd = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        u_clinet_id = '{0}|{1}'.format(userid, api_secret)
-        clinet_id=hashlib.sha256(u_clinet_id.encode('utf-8')).hexdigest()
+        u_appkey = '{0}|{1}'.format(userid, api_secret)
+        appkey=hashlib.sha256(u_appkey.encode('utf-8')).hexdigest()
         #prepare the data
         if access_type == None:
             values = { "source": "API" , "apkversion": "1.0.0"}
@@ -318,7 +318,7 @@ class NorenApi:
         values["pwd"]       = pwd
         values["factor2"]   = twoFA
         values["vc"]        = vendor_code
-        values["appkey"]    = clinet_id        
+        values["appkey"]    = appkey        
         values["imei"]      = imei        
 
         payload = 'jData=' + json.dumps(values)
