@@ -91,7 +91,8 @@ class NorenApi:
           'option_greek' :'/GetOptionGreek',
           'get_daily_price_series' :'/EODChartData',
           'forgot_password_OTP':'/FgtPwdOTP',
-          'gen_acs_tok':'/GenAcsTok'
+          'gen_acs_tok':'/GenAcsTok',
+          'exch_msg':'/ExchMsg'
       },
       'websocket_endpoint': 'wss://wsendpoint/',
       #'eoddata_endpoint' : 'http://eodhost/'
@@ -1221,4 +1222,28 @@ class NorenApi:
 
         resDict = json.loads(res.text)        
 
+        return resDict
+    
+    def exch_msg(self, exchange):
+        config = NorenApi.__service_config
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['exch_msg']}" 
+        print(url)
+
+        #prepare the data
+        values              = {'ordersource':'API'}
+        values["uid"]       = self.__username
+        values["exch"]           = exchange
+        
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
+        
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)
+        
         return resDict
