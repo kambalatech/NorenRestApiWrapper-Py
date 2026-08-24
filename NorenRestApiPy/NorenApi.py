@@ -92,7 +92,8 @@ class NorenApi:
           'get_daily_price_series' :'/EODChartData',
           'forgot_password_OTP':'/FgtPwdOTP',
           'gen_acs_tok':'/GenAcsTok',
-          'exch_msg':'/ExchMsg'
+          'exch_msg':'/ExchMsg',
+          'linked_scrips':'/GetLinkedScrips'
       },
       'websocket_endpoint': 'wss://wsendpoint/',
       #'eoddata_endpoint' : 'http://eodhost/'
@@ -1247,3 +1248,29 @@ class NorenApi:
         resDict = json.loads(res.text)
         
         return resDict
+
+    
+    def linked_scrips(self,token,exchange):
+        config = NorenApi.__service_config 
+
+        #prepare the uri
+        url = f"{config['host']}{config['routes']['linked_scrips']}" 
+        reportmsg(url)
+
+        #prepare the data
+        values               = { "source": "API" }
+        values["token"]     = token
+        values["exchange"]  = exchange
+
+        #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
+        payload = 'jData=' + json.dumps(values)
+
+        reportmsg(payload)
+
+        res = requests.post(url, data=payload, headers=self.__OAuthHeaders)
+        reportmsg(res.text)
+
+        resDict = json.loads(res.text)        
+
+        return resDict
+   
