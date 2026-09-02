@@ -1259,8 +1259,9 @@ class NorenApi:
 
         #prepare the data
         values               = { "source": "API" }
+        values["uid"]       = self.__username
         values["token"]     = token
-        values["exchange"]  = exchange
+        values["exch"]  = exchange
 
         #payload = 'jData=' + json.dumps(values) + f'&jKey={self.__susertoken}'
         payload = 'jData=' + json.dumps(values)
