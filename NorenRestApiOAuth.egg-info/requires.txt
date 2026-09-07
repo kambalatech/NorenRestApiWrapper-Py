@@ -1,4 +1,4 @@
+PyYAML
+pandas
 requests
 websocket-client
-pandas
-PyYAML

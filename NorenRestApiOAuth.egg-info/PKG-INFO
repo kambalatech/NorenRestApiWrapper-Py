@@ -1,6 +1,6 @@
-Metadata-Version: 2.4
+Metadata-Version: 2.1
 Name: NorenRestApiOAuth
-Version: 0.0.40
+Version: 0.0.41
 Summary: A package for NorenOMS
 Author: KumarAnand
 Author-email: kumar.anand@kambala.co.in
@@ -9,18 +9,6 @@ Classifier: License :: Other/Proprietary License
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: requests
-Requires-Dist: websocket-client
-Requires-Dist: pandas
-Requires-Dist: PyYAML
-Dynamic: author
-Dynamic: author-email
-Dynamic: classifier
-Dynamic: description
-Dynamic: description-content-type
-Dynamic: license-file
-Dynamic: requires-dist
-Dynamic: summary
 
 # NorenApi
 
